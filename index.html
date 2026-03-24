@@ -613,6 +613,43 @@ tbody td:first-child{color:var(--text);font-weight:500}
     </div>
 
     <div style="display:none" id="ical-help-block"></div>
+
+    <!-- GUIDE MISE À JOUR -->
+    <div class="card" style="margin-top:18px;border:1px solid var(--border2)">
+      <div class="card-hd" style="cursor:pointer" onclick="toggleAccordion('acc-guide')">
+        <div class="card-title">📖 Comment mettre à jour l'app ?</div>
+        <span id="acc-guide-icon" style="color:var(--text3);font-size:12px;transition:transform 0.2s">▼</span>
+      </div>
+      <div id="acc-guide" style="display:none;margin-top:14px">
+        <div class="alert al-i" style="margin-bottom:14px">
+          L'app est hébergée sur <strong>GitHub Pages</strong> → <a href="https://anlimh.github.io/jalons-pro" target="_blank" style="color:var(--accent2)">anlimh.github.io/jalons-pro</a>
+        </div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8">
+          <div style="font-weight:600;color:var(--text);margin-bottom:8px">🔄 Pour mettre à jour l'app :</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="background:var(--accent);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
+              <span>Télécharge le nouveau fichier depuis Claude et renomme-le <code style="background:var(--bg3);padding:1px 6px;border-radius:4px">index.html</code></span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="background:var(--accent);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
+              <span>Va sur <a href="https://github.com/anlimh/jalons-pro" target="_blank" style="color:var(--accent2)">github.com/anlimh/jalons-pro</a></span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="background:var(--accent);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
+              <span>Glisse le nouveau <code style="background:var(--bg3);padding:1px 6px;border-radius:4px">index.html</code> directement sur la page du dépôt</span>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <span style="background:var(--accent);color:#000;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</span>
+              <span>Clique <strong>"Commit changes"</strong> → attends ~1 minute → l'app est à jour ✅</span>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--r2);font-size:12px;color:var(--text3)">
+            💡 Tes données Supabase sont séparées du code — une mise à jour n'efface jamais tes affaires.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 </div>
@@ -899,6 +936,12 @@ function om(id){
   var modal = document.getElementById(id);
   if(!modal) return;
   modal.classList.add('open');
+  // Empêche les clics dans la modale de remonter jusqu'à l'overlay
+  var inner = modal.querySelector('.modal');
+  if(inner && !inner._stopPropSet){
+    inner.addEventListener('click', function(e){ e.stopPropagation(); });
+    inner._stopPropSet = true;
+  }
   if(id==='mna'&&!editAffId)pfAff();
   if(id==='mnt')pfTache();
   if(id==='mne')pfEch();
@@ -1637,17 +1680,23 @@ function renderTimeGrid(dayColumns, container){
 }
 
 function enrichEvtsWithTime(evts){
-  // For iCal events, parse time from raw ical cache
   return evts.map(function(e){
-    if(e.t==='ical' && e.rawStart){
-      var m=e.rawStart.match(/T(\d{2})(\d{2})/);
-      if(m){
-        e.startHour=parseInt(m[1]); e.startMin=parseInt(m[2]);
-        if(e.rawEnd){var m2=e.rawEnd.match(/T(\d{2})(\d{2})/);if(m2){e.endHour=parseInt(m2[1]);e.endMin=parseInt(m2[2]);}}
-        else{e.endHour=e.startHour+1;e.endMin=e.startMin;}
+    if(e.t==='ical'){
+      // Utilise e.start qui est déjà converti en heure Réunion (UTC+4)
+      // Format: 2026-03-24T13:00
+      if(e.start && e.start.indexOf('T')!==-1){
+        var tp=e.start.split('T')[1].split(':');
+        e.startHour=parseInt(tp[0]); e.startMin=parseInt(tp[1])||0;
+      } else {
+        e.startHour=8; e.startMin=0; // heure par défaut si journée entière
+      }
+      if(e.end && e.end.indexOf('T')!==-1){
+        var tp2=e.end.split('T')[1].split(':');
+        e.endHour=parseInt(tp2[0]); e.endMin=parseInt(tp2[1])||0;
+      } else {
+        e.endHour=e.startHour+1; e.endMin=e.startMin;
       }
     } else if(e.t==='tk'||e.t==='re'||e.t==='dl'){
-      // Tâches sans heure: placer à 9h par défaut, durée 1h
       e.startHour=e.startHour||9; e.startMin=e.startMin||0;
       e.endHour=e.endHour||(e.startHour+1); e.endMin=e.endMin||0;
     }
@@ -1788,9 +1837,11 @@ function getCEvts(yr,mo,showDone,showDl,showTaches,showReunions,checkedIcalIds){
       var cached=icalCache[ag.id]||[];
       cached.forEach(function(e){
         if(!e.start) return;
-        var d=new Date(e.start);
+        // e.start peut être "2026-03-24" ou "2026-03-24T13:00"
+        var datePart = e.start.split('T')[0];
+        var d = new Date(datePart);
         if(d.getFullYear()===yr&&d.getMonth()===mo){
-          evts.push({date:e.start,t:'ical',col:ag.col,lbl:e.title.substr(0,18),agNom:ag.nom,sub:e.location||ag.nom,rawStart:e.rawStart,rawEnd:e.rawEnd});
+          evts.push({date:datePart, start:e.start, end:e.end, t:'ical', col:ag.col, lbl:e.title.substr(0,22), agNom:ag.nom, sub:e.location||ag.nom});
         }
       });
     });
@@ -2273,14 +2324,43 @@ function parseIcal(txt){
 
 function parseIcalDate(s){
   if(!s) return null;
-  // Format: 20260324T130000Z ou 20260324T130000 ou 20260324
+  var isUTC = s.indexOf('Z') !== -1;
   var clean = s.replace(/[Z\s]/g,'');
   var digits = clean.replace(/[^0-9]/g,'');
   if(digits.length < 8) return null;
-  var y = digits.substr(0,4);
+
+  var y  = digits.substr(0,4);
   var mo = digits.substr(4,2);
-  var d = digits.substr(6,2);
-  return y+'-'+mo+'-'+d;
+  var d  = digits.substr(6,2);
+
+  // Date seule sans heure
+  if(digits.length < 12) return y+'-'+mo+'-'+d;
+
+  var h  = digits.substr(8,2);
+  var mi = digits.substr(10,2);
+
+  if(!isUTC){
+    // Heure locale avec TZID (ex: Indian/Reunion) — déjà en heure Réunion, on garde tel quel
+    return y+'-'+mo+'-'+d+'T'+h+':'+mi;
+  }
+
+  // UTC avec Z → convertir en UTC+4 (Réunion) manuellement sans passer par new Date
+  var totalMins = parseInt(h)*60 + parseInt(mi) + 4*60; // +4h
+  var extraDays = 0;
+  if(totalMins >= 1440){ totalMins -= 1440; extraDays = 1; }
+
+  var hh  = String(Math.floor(totalMins/60)).padStart(2,'0');
+  var mmi = String(totalMins%60).padStart(2,'0');
+
+  if(extraDays > 0){
+    // Avancer le jour de 1 (gestion simplifiée)
+    var dt = new Date(parseInt(y), parseInt(mo)-1, parseInt(d)+1);
+    y  = String(dt.getFullYear());
+    mo = String(dt.getMonth()+1).padStart(2,'0');
+    d  = String(dt.getDate()).padStart(2,'0');
+  }
+
+  return y+'-'+mo+'-'+d+'T'+hh+':'+mmi;
 }
 
 // getIcalEventsForMonth now inlined in getCEvts
