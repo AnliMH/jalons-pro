@@ -577,13 +577,12 @@ tbody td:first-child{color:var(--text);font-weight:500}
         </div>
 
         <!-- Types d'affaires accordéon -->
-        <div class="card">
+        <div class="card mb16">
           <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding-bottom:0" onclick="toggleAccordion('acc-ta')">
             <div class="card-title">🏢 Types d'affaires</div>
             <span id="acc-ta-icon" style="color:var(--text3);font-size:12px;transition:transform 0.2s">▼</span>
           </div>
           <div id="acc-ta" style="display:none">
-            <!-- Bouton ajout sticky en haut -->
             <div style="position:sticky;top:0;z-index:1;background:var(--card);padding:10px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px">
               <div class="flex gap8">
                 <input type="text" id="ta-new" placeholder="Nouveau type d'affaire...">
@@ -591,6 +590,23 @@ tbody td:first-child{color:var(--text);font-weight:500}
               </div>
             </div>
             <div id="ta-list"></div>
+          </div>
+        </div>
+
+        <!-- Catégories d'intervenants accordéon -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding-bottom:0" onclick="toggleAccordion('acc-cat')">
+            <div class="card-title">👥 Catégories d'intervenants</div>
+            <span id="acc-cat-icon" style="color:var(--text3);font-size:12px;transition:transform 0.2s">▼</span>
+          </div>
+          <div id="acc-cat" style="display:none;margin-top:14px">
+            <div style="margin-bottom:8px">
+              <div class="flex gap8">
+                <input type="text" id="cat-new" placeholder="Nouvelle catégorie...">
+                <button class="btn btn-p btn-sm" onclick="addCat()" style="flex-shrink:0">+ Ajouter</button>
+              </div>
+            </div>
+            <div id="cat-list"></div>
           </div>
         </div>
       </div>
@@ -655,6 +671,22 @@ tbody td:first-child{color:var(--text);font-weight:500}
 </div>
 
 <!-- NAVIGATION MOBILE -->
+<!-- VERSION MOBILE (accessible depuis nav) -->
+<div id="m-version" class="mo">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div class="m-hd"><div class="m-title">Jalons Pro</div><button class="xbtn" onclick="cm('m-version')">✕</button></div>
+    <div class="m-body" style="text-align:center;padding:24px 20px">
+      <div style="font-size:48px;margin-bottom:12px">🏗️</div>
+      <div style="font-size:22px;font-weight:700;font-family:var(--fs)">Jalons Pro</div>
+      <div style="font-size:16px;color:var(--accent);font-weight:600;margin:4px 0 12px">V.1.03</div>
+      <div style="font-size:12px;color:var(--text3)">Dernière mise à jour<br>25/03/2026 à 04:04</div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <button class="btn btn-p" style="width:100%" onclick="cm('m-version');go('parametres')">⚙️ Paramètres</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <nav class="mobile-nav" id="mobile-nav">
   <button class="mobile-nav-item active" onclick="go('dashboard');setMobileNav(this)" id="mn-dashboard">
     <span class="mn-icon">⊞</span><span>Dashboard</span>
@@ -670,6 +702,9 @@ tbody td:first-child{color:var(--text);font-weight:500}
   </button>
   <button class="mobile-nav-item" onclick="om('m-profil')" id="mn-profil">
     <span class="mn-icon">👤</span><span>Profil</span>
+  </button>
+  <button class="mobile-nav-item" onclick="om('m-version')" id="mn-more">
+    <span class="mn-icon">⋯</span><span>Plus</span>
   </button>
 </nav>
 
@@ -801,7 +836,7 @@ tbody td:first-child{color:var(--text);font-weight:500}
     <div class="m-hd"><div class="m-title">👤 Nouvel intervenant</div><button class="xbtn" onclick="cm('mni')">✕</button></div>
     <div class="m-body">
       <div class="fr mb12"><div class="fg"><label>Nom *</label><input type="text" id="i-nom" placeholder="Prénom Nom"></div><div class="fg"><label>Rôle / Poste</label><input type="text" id="i-role" placeholder="ex: Maître d'œuvre"></div></div>
-      <div class="fr mb12"><div class="fg"><label>Entreprise</label><input type="text" id="i-ent" placeholder="Nom de l'entreprise"></div><div class="fg"><label>Catégorie</label><select id="i-cat"><option value="client">Client / MOA</option><option value="moe">Maître d'œuvre</option><option value="entreprise">Entreprise</option><option value="sous-traitant">Sous-traitant</option><option value="interne">Interne (collègue)</option><option value="autre">Autre</option></select></div></div>
+      <div class="fr mb12"><div class="fg"><label>Entreprise</label><input type="text" id="i-ent" placeholder="Nom de l'entreprise"></div><div class="fg"><label>Catégorie</label><select id="i-cat"></select></div></div>
       <div class="fr mb12"><div class="fg"><label>Email</label><input type="email" id="i-email" placeholder="email@exemple.com"></div><div class="fg"><label>Téléphone</label><input type="tel" id="i-tel" placeholder="0692 XX XX XX"></div></div>
       <div class="fg"><label>Notes</label><textarea id="i-notes" placeholder="Informations complémentaires..."></textarea></div>
     </div>
@@ -964,6 +999,7 @@ function om(id){
     });
     renderAbsences();
   }
+  if(id==='mni'){pfItv();}
   if(id==='mai'){var s=document.getElementById('ai-sel');s.innerHTML='<option value="">-- Choisir --</option>'+db.intervenants.map(function(i){return'<option value="'+i.id+'">'+esc(i.nom)+' — '+esc(i.role||i.cat)+'</option>';}).join('');}
 }
 function cm(id){
@@ -1183,7 +1219,13 @@ function openTache(tid){
     '<div class="fr mb12"><div class="fg"><label>⏰ Heure début</label><input type="time" id="dt-hdeb" value="'+(t.hdeb||'')+'"></div><div class="fg"><label>⏰ Heure fin</label><input type="time" id="dt-hfin" value="'+(t.hfin||'')+'"></div></div>'+
     '<div class="fr mb12">'+
       '<div class="fg"><label>Statut</label><select id="dt-stat"><option value="todo"'+(t.stat==='todo'?' selected':'')+'>À faire</option><option value="en-cours"'+(t.stat==='en-cours'?' selected':'')+'>En cours</option><option value="done"'+(t.stat==='done'?' selected':'')+'>Terminée</option></select></div>'+
-      '<div class="fg"><label>Indice de révision</label><select id="dt-ind"><option value="">—</option>'+indOpts.map(function(x){return'<option'+(t.ind===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'+
+      '<div class="fg"><label>Indice de révision</label>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+      '<select id="dt-ind" style="flex:1"><option value="">—</option>'+indOpts.map(function(x){return'<option'+(t.ind===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select>'+
+      '<button class="btn btn-p btn-sm" onclick="ajouterRevision()">+ Valider indice</button>'+
+      '</div></div>'+
+      '<div style="margin-bottom:12px"><label style="font-size:12px;color:var(--text3)">📋 Historique des révisions</label>'+
+      '<div id="dt-rev-list" style="margin-top:6px">'+renderRevList(t)+'</div></div>'+
     '</div>'+
     '<div class="fg mb12"><label>📤 Date d\'envoi au client</label><input type="date" id="dt-envoi" value="'+(t.envoi||'')+'"></div>'+
     '<div class="fg"><label>Notes</label><textarea id="dt-notes">'+(t.notes||'').replace(/</g,'&lt;')+'</textarea></div>'+
@@ -1304,6 +1346,14 @@ function dTab(t,el){
 }
 
 // ===== INTERVENANTS =====
+function pfItv(selectedCat){
+  var cats=db.params.cats||['Client / MOA','Maître d\'œuvre','Entreprise','Sous-traitant','Interne (collègue)','Autre'];
+  var s=document.getElementById('i-cat');
+  if(s){
+    s.innerHTML=cats.map(function(c){return'<option value="'+esc(c)+'"'+(c===selectedCat?' selected':'')+'>'+esc(c)+'</option>';}).join('');
+  }
+}
+
 function saveItv(){
   var nom=document.getElementById('i-nom').value.trim();if(!nom){alert('Nom requis.');return;}
   db.intervenants.push({id:gid(),nom:nom,role:document.getElementById('i-role').value.trim(),ent:document.getElementById('i-ent').value.trim(),cat:document.getElementById('i-cat').value,email:document.getElementById('i-email').value.trim(),tel:document.getElementById('i-tel').value.trim(),notes:document.getElementById('i-notes').value.trim()});
@@ -1955,6 +2005,7 @@ function toggleAccordion(id){
   if(!open){
     if(id==='acc-tt') document.getElementById('tt-list').innerHTML=db.params.tt.map(function(t,i){return'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><div style="flex:1;padding:6px 10px;background:var(--bg3);border-radius:6px;font-size:13px">'+esc(t)+'</div><button class="btn btn-d btn-sm" onclick="rmTT('+i+')">✕</button></div>';}).join('');
     if(id==='acc-ta') document.getElementById('ta-list').innerHTML=db.params.ta.map(function(t,i){return'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><div style="flex:1;padding:6px 10px;background:var(--bg3);border-radius:6px;font-size:13px">'+esc(t)+'</div><button class="btn btn-d btn-sm" onclick="rmTA('+i+')">✕</button></div>';}).join('');
+    if(id==='acc-cat') rCatList();
   }
 }
 
@@ -1986,6 +2037,65 @@ function saveP(){
   if(pa)pa.textContent=db.params.initiales||'CA';
 }
 function addTT(){var v=document.getElementById('nt-new').value.trim();if(!v)return;db.params.tt.push(v);save();document.getElementById('nt-new').value='';rParam();}
+function addCat(){
+  var v=document.getElementById('cat-new').value.trim(); if(!v)return;
+  if(!db.params.cats)db.params.cats=['Client / MOA','Maître d\'œuvre','Entreprise','Sous-traitant','Interne (collègue)','Autre'];
+  db.params.cats.push(v); save();
+  document.getElementById('cat-new').value='';
+  rCatList();
+}
+function rmCat(i){
+  db.params.cats.splice(i,1); save(); rCatList();
+}
+function rCatList(){
+  var cats=db.params.cats||['Client / MOA','Maître d\'œuvre','Entreprise','Sous-traitant','Interne (collègue)','Autre'];
+  if(!db.params.cats) db.params.cats=cats.slice();
+  var el=document.getElementById('cat-list'); if(!el)return;
+  if(!cats.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Aucune catégorie</div>';
+    return;
+  }
+  el.innerHTML=cats.map(function(c,i){
+    var count=db.intervenants.filter(function(itv){return itv.cat===c;}).length;
+    return '<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px" data-idx="'+i+'">'+
+      '<div class="cat-edit-zone" style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg3);border-radius:6px;font-size:13px;gap:8px">'+
+        '<span class="cat-label">'+esc(c)+'</span>'+
+        (count?'<span style="font-size:11px;color:var(--text3);white-space:nowrap">'+count+' intervenant'+(count>1?'s':'')+'</span>':'')+
+      '</div>'+
+      '<button class="btn btn-s btn-sm cat-edit-btn" data-idx="'+i+'" title="Renommer">✏️</button>'+
+      '<button class="btn btn-d btn-sm cat-del-btn" data-idx="'+i+'" title="Supprimer">✕</button>'+
+    '</div>';
+  }).join('');
+  // Delete
+  el.querySelectorAll('.cat-del-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=parseInt(this.getAttribute('data-idx'));
+      if(confirm('Supprimer "'+db.params.cats[i]+'" ?')) rmCat(i);
+    });
+  });
+  // Edit/rename
+  el.querySelectorAll('.cat-edit-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=parseInt(this.getAttribute('data-idx'));
+      var row=el.querySelector('[data-idx="'+i+'"] .cat-edit-zone');
+      var label=el.querySelector('[data-idx="'+i+'"] .cat-label');
+      var oldVal=db.params.cats[i];
+      var input=document.createElement('input');
+      input.type='text'; input.value=oldVal;
+      input.style.cssText='flex:1;padding:4px 8px;font-size:13px;background:var(--bg4);border:1px solid var(--accent);border-radius:4px;color:var(--text)';
+      label.replaceWith(input);
+      input.focus();
+      input.select();
+      function doSave(){
+        var v=input.value.trim();
+        if(v && v!==oldVal){ db.params.cats[i]=v; save(); showToast('✅ Catégorie renommée','success'); }
+        rCatList();
+      }
+      input.addEventListener('blur', doSave);
+      input.addEventListener('keydown',function(e){ if(e.key==='Enter') doSave(); if(e.key==='Escape') rCatList(); });
+    });
+  });
+}
 function rmTT(i){db.params.tt.splice(i,1);save();rParam();}
 function addTA(){var v=document.getElementById('ta-new').value.trim();if(!v)return;db.params.ta.push(v);save();document.getElementById('ta-new').value='';rParam();}
 function rmTA(i){db.params.ta.splice(i,1);save();rParam();}
@@ -2596,6 +2706,40 @@ function calcJours(taches){
     var d2=t.finR||t.fin||tod();
     return acc+Math.max(0,Math.ceil((new Date(d2)-new Date(t.debut))/86400000));
   },0);
+}
+
+
+// ===== HISTORIQUE DES RÉVISIONS =====
+function renderRevList(t){
+  if(!t.revisions || !t.revisions.length) return '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:6px 0">Aucune révision enregistrée</div>';
+  return t.revisions.slice().reverse().map(function(r){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:var(--r2);margin-bottom:4px;font-size:12px">'+
+      '<span style="background:var(--accent5);color:#fff;padding:1px 8px;border-radius:10px;font-weight:700;font-size:11px">'+esc(r.ind)+'</span>'+
+      '<div style="flex:1"><div style="color:var(--text)">'+esc(r.note||'Mise à jour indice')+'</div>'+
+      '<div style="color:var(--text3);font-size:11px">'+fd(r.date.split('T')[0])+(r.date.indexOf('T')!==-1?' à '+r.date.split('T')[1].substr(0,5):'')+'</div></div>'+
+      '</div>';
+  }).join('');
+}
+
+function ajouterRevision(){
+  var sel=document.getElementById('dt-ind');
+  if(!sel||!sel.value) return;
+  var t=getCurTache(); if(!t) return;
+  if(!t.revisions) t.revisions=[];
+  var note=prompt('Note pour cette révision (optionnel) :','');
+  if(note===null) return; // annulé
+  t.revisions.push({ind:sel.value, date:new Date().toISOString(), note:note||''});
+  t.ind=sel.value; // met aussi à jour l'indice courant
+  save();
+  var rl=document.getElementById('dt-rev-list');
+  if(rl) rl.innerHTML=renderRevList(t);
+  showToast('📋 Indice '+sel.value+' enregistré !','success');
+}
+
+function getCurTache(){
+  var a=db.affaires.find(function(x){return x.id===curAff;});
+  if(!a||!curTache) return null;
+  return a.taches.find(function(t){return t.id===curTache;});
 }
 
 // ===== DROPBOX LIEN =====
